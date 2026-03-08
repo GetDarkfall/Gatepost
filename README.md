@@ -1,4 +1,4 @@
-![Gatepost Banner](https://raw.githubusercontent.com/GetBastion/Gatepost/master/Image.png)
+![Gatepost Banner](Image.png)
 
 # Gatepost
 
