@@ -26,10 +26,17 @@ if ! command -v npm >/dev/null 2>&1; then
 fi
 
 # Install globally
-npm install -g gatepost-sec
+npm install -g @getbastionai/gatepost
 
 # Run setup to add shell aliases
 gatepost setup
 
-echo ""
-echo "Done. Restart your terminal or run: source ~/.zshrc"
+printf "\033[93m\n"
+printf "   ____       _                       _   \n"
+printf "  / ___| __ _| |_ ___ _ __   ___  ___| |_ \n"
+printf " | |  _ / _\` | __/ _ \\ '_ \\ / _ \\/ __| __|\n"
+printf " | |_| | (_| | ||  __/ |_) | (_) \\__ \\ |_ \n"
+printf "  \\____|\__,_|\\__\\___|._/ \\___/|___/\\__|\n"
+printf "                     |_|                  \n"
+printf "\033[0m\n"
+printf "\033[37mDone. Restart your terminal or run: source ~/.zshrc\033[0m\n"
