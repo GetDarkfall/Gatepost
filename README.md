@@ -1,4 +1,4 @@
-![Gatepost Banner](Image.png)
+![Gatepost Banner](https://raw.githubusercontent.com/GetBastion/Gatepost/master/Image.png)
 
 # Gatepost
 
@@ -118,7 +118,7 @@ If the OSV network request fails (offline or timeout), Gatepost warns and procee
 
 ```sh
 gatepost remove
-npm uninstall -g gatepost-sec
+npm uninstall -g @getbastionai/gatepost
 ```
 
 ---
