@@ -28,7 +28,7 @@ If a package is flagged, the install is blocked. If it's clean, Gatepost steps a
 ## Installation
 
 ```sh
-npm install -g gatepost-sec
+npm install -g @getbastionai/gatepost
 ```
 
 That's it. Shell aliases are set up automatically — restart your terminal and every package manager command is protected.
