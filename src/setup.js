@@ -49,16 +49,22 @@ function setup() {
     }
   }
 
-  process.stderr.write('\x1b[2J\x1b[H')
-  process.stderr.write('\x1b[93m\n')
-  process.stderr.write('   ____       _                       _   \n')
-  process.stderr.write('  / ___| __ _| |_ ___ _ __   ___  ___| |_ \n')
-  process.stderr.write(' | |  _ / _` | __/ _ \\ \'_ \\ / _ \\/ __| __|\n')
-  process.stderr.write(' | |_| | (_| | ||  __/ |_) | (_) \\__ \\ |_ \n')
-  process.stderr.write('  \\____|\\__,_|\\__\\___| .__/ \\___/|___/\\__|\n')
-  process.stderr.write('                     |_|                  \n')
-  process.stderr.write('\x1b[0m\n')
-  process.stderr.write('\x1b[37mDone. Restart your terminal or run: source ~/.zshrc\x1b[0m\n')
+  try {
+    const tty = fs.createWriteStream('/dev/tty')
+    tty.write('\x1b[2J\x1b[H')
+    tty.write('\x1b[93m\n')
+    tty.write('   ____       _                       _   \n')
+    tty.write('  / ___| __ _| |_ ___ _ __   ___  ___| |_ \n')
+    tty.write(' | |  _ / _` | __/ _ \\ \'_ \\ / _ \\/ __| __|\n')
+    tty.write(' | |_| | (_| | ||  __/ |_) | (_) \\__ \\ |_ \n')
+    tty.write('  \\____|\\__,_|\\__\\___| .__/ \\___/|___/\\__|\n')
+    tty.write('                     |_|                  \n')
+    tty.write('\x1b[0m\n')
+    tty.write('\x1b[37mDone. Restart your terminal or run: source ~/.zshrc\x1b[0m\n')
+    tty.end()
+  } catch (e) {
+    // not a TTY (e.g. CI), skip
+  }
 }
 
 function remove() {
