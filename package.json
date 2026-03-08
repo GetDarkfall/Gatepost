@@ -1,0 +1,30 @@
+{
+  "name": "gatepost-sec",
+  "version": "1.0.0",
+  "description": "Wraps npm, npx, yarn, pnpm, and pnpx to block malicious packages in real-time",
+  "scripts": {
+    "postinstall": "node ./src/index.js setup"
+  },
+  "bin": {
+    "gatepost": "./src/index.js"
+  },
+  "files": [
+    "src/"
+  ],
+  "keywords": [
+    "security",
+    "supply-chain",
+    "npm",
+    "malware",
+    "package-manager",
+    "typosquatting"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=16"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/GetBastion/gatepost.git"
+  }
+}
