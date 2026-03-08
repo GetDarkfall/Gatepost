@@ -35,14 +35,18 @@ function setup() {
 
   let updated = 0
   for (const config of configs) {
-    const contents = fs.readFileSync(config, 'utf8')
-    if (contents.includes(MARKER_START)) {
-      console.log(`  Already configured: ${config}`)
-      continue
+    try {
+      const contents = fs.readFileSync(config, 'utf8')
+      if (contents.includes(MARKER_START)) {
+        console.log(`  Already configured: ${config}`)
+        continue
+      }
+      fs.appendFileSync(config, block)
+      console.log(`  Updated: ${config}`)
+      updated++
+    } catch (e) {
+      // skip files we can't read or write
     }
-    fs.appendFileSync(config, block)
-    console.log(`  Updated: ${config}`)
-    updated++
   }
 
   if (updated > 0) {
@@ -58,11 +62,15 @@ function remove() {
 
   let removed = 0
   for (const config of configs) {
-    const contents = fs.readFileSync(config, 'utf8')
-    if (!contents.includes(MARKER_START)) continue
-    fs.writeFileSync(config, contents.replace(re, '\n'))
-    console.log(`  Removed aliases from: ${config}`)
-    removed++
+    try {
+      const contents = fs.readFileSync(config, 'utf8')
+      if (!contents.includes(MARKER_START)) continue
+      fs.writeFileSync(config, contents.replace(re, '\n'))
+      console.log(`  Removed aliases from: ${config}`)
+      removed++
+    } catch (e) {
+      // skip files we can't read or write
+    }
   }
 
   if (removed === 0) {
