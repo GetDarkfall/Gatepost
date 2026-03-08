@@ -1,4 +1,4 @@
-![Gatepost Banner](Image.png)
+![Gatepost](banner.png)
 
 <h3 align="center">Supply chain security for every package manager.</h3>
 
