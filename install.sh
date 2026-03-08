@@ -1,10 +1,10 @@
 #!/bin/sh
 set -e
 
-# Darkfall installer
+# Gatepost installer
 # Usage: curl -fsSL https://raw.githubusercontent.com/GetBastion/Gatepost/master/install.sh | sh
 
-echo "Installing Darkfall..."
+echo "Installing Gatepost..."
 
 # Check for Node.js
 if ! command -v node >/dev/null 2>&1; then
@@ -21,7 +21,7 @@ fi
 
 # Check for npm
 if ! command -v npm >/dev/null 2>&1; then
-  echo "Error: npm is required to install Darkfall"
+  echo "Error: npm is required to install Gatepost"
   exit 1
 fi
 
@@ -29,7 +29,7 @@ fi
 npm install -g @getbastionai/gatepost
 
 # Setup runs automatically via postinstall, but run again in case it was skipped
-darkfall setup
+gatepost setup
 
-printf "\n\033[35;1mDarkfall\033[0m \033[90mhas been installed\033[0m \033[92msuccessfully\033[0m\n\n"
+printf "\n\033[35;1mGatepost\033[0m \033[90mhas been installed\033[0m \033[92msuccessfully\033[0m\n\n"
 printf "\033[90mRestart your terminal or run: source ~/.zshrc\033[0m\n"

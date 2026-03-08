@@ -42,7 +42,7 @@ function fetchJSON(opts, timeout) {
     const req = https.request({
       ...opts,
       method: 'GET',
-      headers: { 'Accept': 'application/json', 'User-Agent': 'darkfall' },
+      headers: { 'Accept': 'application/json', 'User-Agent': 'gatepost' },
       timeout,
     }, (res) => {
       // Follow one redirect (some registries 301/302)

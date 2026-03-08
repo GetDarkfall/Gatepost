@@ -20,7 +20,7 @@ const { getPackageAge } = require('../api/registry')
  *
  * @param {string} pkgName    - Package name to check
  * @param {string} ecosystem  - Package ecosystem (e.g. 'npm', 'PyPI')
- * @param {Object} config     - Darkfall configuration object
+ * @param {Object} config     - Gatepost configuration object
  * @returns {Promise<Object|null>} Issue object if too new, null if fine
  */
 async function check(pkgName, ecosystem, config) {

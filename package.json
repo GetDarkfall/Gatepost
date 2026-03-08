@@ -6,7 +6,7 @@
     "postinstall": "node ./src/index.js setup"
   },
   "bin": {
-    "darkfall": "./src/index.js"
+    "gatepost": "./src/index.js"
   },
   "files": [
     "src/",
@@ -21,7 +21,7 @@
     "package-manager",
     "typosquatting"
   ],
-  "license": "MIT",
+  "license": "AGPL-3.0-only",
   "engines": {
     "node": ">=16"
   },

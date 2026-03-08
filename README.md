@@ -1,6 +1,6 @@
 ![Gatepost Banner](Image.png)
 
-# Darkfall
+# Gatepost
 
 Supply chain security for every package manager. Scans installs for malware, typosquats, vulnerabilities, and suspiciously new packages — before they touch your machine.
 
@@ -11,7 +11,7 @@ Supply chain security for every package manager. Scans installs for malware, typ
 | **CVE scanning** | Live vulnerability lookup via [OSV.dev](https://osv.dev) |
 | **Age detection** | Packages published less than 24 hours ago |
 
-If a package is flagged, the install is blocked. If it's clean, Darkfall steps aside — zero friction.
+If a package is flagged, the install is blocked. If it's clean, Gatepost steps aside — zero friction.
 
 Works in CI/CD pipelines. Supports silent and verbose logging modes.
 
@@ -61,11 +61,11 @@ For CI pipelines (GitHub Actions, GitLab, CircleCI, Jenkins, Azure, Bitbucket):
 
 ```sh
 npm install -g @getbastionai/gatepost
-darkfall setup --ci
-export PATH="$HOME/.darkfall/bin:$PATH"
+gatepost setup --ci
+export PATH="$HOME/.gatepost/bin:$PATH"
 ```
 
-This creates lightweight shims in `~/.darkfall/bin` instead of shell aliases — works in any CI environment.
+This creates lightweight shims in `~/.gatepost/bin` instead of shell aliases — works in any CI environment.
 
 ---
 
@@ -81,16 +81,16 @@ cargo add serde
 gem install rails
 ```
 
-Darkfall runs silently when everything is clean. Output only appears when something is flagged.
+Gatepost runs silently when everything is clean. Output only appears when something is flagged.
 
 ### Logging modes
 
 ```sh
-darkfall --silent npm install lodash    # Only show blocked installs
-darkfall --verbose npm install lodash   # Show detailed diagnostic output
+gatepost --silent npm install lodash    # Only show blocked installs
+gatepost --verbose npm install lodash   # Show detailed diagnostic output
 ```
 
-Or set the default in `~/.darkfallrc`:
+Or set the default in `~/.gatepostrc`:
 
 ```json
 { "logLevel": "silent" }
@@ -99,7 +99,7 @@ Or set the default in `~/.darkfallrc`:
 ### Blocked install
 
 ```
-darkfall: install blocked
+gatepost: install blocked
 
   blocked  event-stream  Known malicious package
 ```
@@ -109,7 +109,7 @@ The install exits with code 1. Nothing was installed.
 ### Warning (install proceeds)
 
 ```
-darkfall: warning
+gatepost: warning
 
   warn  lodahs  Possible typosquat of "lodash"
 ```
@@ -123,7 +123,7 @@ Warnings are shown but the install is not blocked.
 Scan packages without installing them:
 
 ```sh
-darkfall check express axios lodash
+gatepost check express axios lodash
 ```
 
 ```
@@ -141,10 +141,10 @@ All packages look clean.
 Create a config file to customize behavior:
 
 ```sh
-darkfall init
+gatepost init
 ```
 
-This creates `~/.darkfallrc` where you can:
+This creates `~/.gatepostrc` where you can:
 
 - Toggle individual checks on/off
 - Change the age threshold (default: 1 day)
@@ -181,12 +181,12 @@ This creates `~/.darkfallrc` where you can:
 
 | Command | Description |
 |---|---|
-| `darkfall setup` | Add shell aliases (run once after install) |
-| `darkfall setup --ci` | Install PATH shims for CI/CD pipelines |
-| `darkfall remove` | Remove shell aliases and CI shims |
-| `darkfall init` | Create a `.darkfallrc` config file |
-| `darkfall check <pkg...>` | Scan packages without installing |
-| `darkfall <manager> [args]` | Run any manager with protection |
+| `gatepost setup` | Add shell aliases (run once after install) |
+| `gatepost setup --ci` | Install PATH shims for CI/CD pipelines |
+| `gatepost remove` | Remove shell aliases and CI shims |
+| `gatepost init` | Create a `.gatepostrc` config file |
+| `gatepost check <pkg...>` | Scan packages without installing |
+| `gatepost <manager> [args]` | Run any manager with protection |
 
 | Flag | Effect |
 |---|---|
@@ -197,21 +197,21 @@ This creates `~/.darkfallrc` where you can:
 
 ## How it works
 
-1. Shell aliases redirect `npm install foo` → `darkfall npm install foo`
-2. Darkfall extracts package names from the command arguments
+1. Shell aliases redirect `npm install foo` → `gatepost npm install foo`
+2. Gatepost extracts package names from the command arguments
 3. Four checks run in parallel: blocklist, typosquat, OSV vulnerability, package age
 4. Blocked packages exit with code 1 — nothing installs
 5. Warnings print to stderr but allow the install to continue
 6. Clean packages pass straight through to the real package manager
 
-If network checks fail, Darkfall warns and proceeds by default — it never blocks a legitimate workflow unless you configure it to.
+If network checks fail, Gatepost warns and proceeds by default — it never blocks a legitimate workflow unless you configure it to.
 
 ---
 
 ## Uninstall
 
 ```sh
-darkfall remove
+gatepost remove
 npm uninstall -g @getbastionai/gatepost
 ```
 
@@ -225,4 +225,4 @@ npm uninstall -g @getbastionai/gatepost
 
 ## License
 
-MIT
+AGPL-3.0

@@ -4,7 +4,7 @@
  * Shell alias setup and removal.
  *
  * Installs shell aliases so every package manager command is
- * automatically routed through Darkfall. Supports:
+ * automatically routed through Gatepost. Supports:
  *   - Zsh    (~/.zshrc)
  *   - Bash   (~/.bashrc, ~/.bash_profile, ~/.profile)
  *   - Fish   (~/.config/fish/config.fish)
@@ -25,10 +25,10 @@ const MANAGERS = [
   'python', 'python3',
 ]
 
-const SHIM_DIR = path.join(os.homedir(), '.darkfall', 'bin')
+const SHIM_DIR = path.join(os.homedir(), '.gatepost', 'bin')
 
-const MARKER_START = '# darkfall-start'
-const MARKER_END = '# darkfall-end'
+const MARKER_START = '# gatepost-start'
+const MARKER_END = '# gatepost-end'
 
 // ── Alias block builders ─────────────────────────────────────────────
 
@@ -41,10 +41,10 @@ const ALIAS_MANAGERS = MANAGERS.filter(m => m !== 'python' && m !== 'python3')
  * for python/python3 that only intercepts `-m pip` invocations.
  */
 function buildPosixBlock() {
-  const aliases = ALIAS_MANAGERS.map(m => `alias ${m}='darkfall ${m}'`).join('\n')
+  const aliases = ALIAS_MANAGERS.map(m => `alias ${m}='gatepost ${m}'`).join('\n')
   const pythonFn = `
-python() { case "$1" in -m) case "$2" in pip|pip3) darkfall python "$@"; return;; esac;; esac; command python "$@"; }
-python3() { case "$1" in -m) case "$2" in pip|pip3) darkfall python3 "$@"; return;; esac;; esac; command python3 "$@"; }`
+python() { case "$1" in -m) case "$2" in pip|pip3) gatepost python "$@"; return;; esac;; esac; command python "$@"; }
+python3() { case "$1" in -m) case "$2" in pip|pip3) gatepost python3 "$@"; return;; esac;; esac; command python3 "$@"; }`
   return `\n${MARKER_START}\n${aliases}${pythonFn}\n${MARKER_END}\n`
 }
 
@@ -54,11 +54,11 @@ python3() { case "$1" in -m) case "$2" in pip|pip3) darkfall python3 "$@"; retur
  */
 function buildFishBlock() {
   const functions = ALIAS_MANAGERS.map(m =>
-    `function ${m} --wraps='${m}' --description 'darkfall-wrapped ${m}'; darkfall ${m} $argv; end`
+    `function ${m} --wraps='${m}' --description 'gatepost-wrapped ${m}'; gatepost ${m} $argv; end`
   ).join('\n')
   const pythonFn = `
-function python --wraps='python' --description 'darkfall-wrapped python'; if test "$argv[1]" = "-m"; and contains -- "$argv[2]" pip pip3; darkfall python $argv; else; command python $argv; end; end
-function python3 --wraps='python3' --description 'darkfall-wrapped python3'; if test "$argv[1]" = "-m"; and contains -- "$argv[2]" pip pip3; darkfall python3 $argv; else; command python3 $argv; end; end`
+function python --wraps='python' --description 'gatepost-wrapped python'; if test "$argv[1]" = "-m"; and contains -- "$argv[2]" pip pip3; gatepost python $argv; else; command python $argv; end; end
+function python3 --wraps='python3' --description 'gatepost-wrapped python3'; if test "$argv[1]" = "-m"; and contains -- "$argv[2]" pip pip3; gatepost python3 $argv; else; command python3 $argv; end; end`
   return `\n${MARKER_START}\n${functions}${pythonFn}\n${MARKER_END}\n`
 }
 
@@ -66,25 +66,25 @@ function python3 --wraps='python3' --description 'darkfall-wrapped python3'; if 
  * Build alias block for C-shell family (tcsh, csh).
  * Uses `alias name 'command'` syntax.
  * Note: csh can't do conditional aliases easily, so python -m pip
- * is not intercepted in csh — users can run `darkfall python -m pip` directly.
+ * is not intercepted in csh — users can run `gatepost python -m pip` directly.
  */
 function buildCshBlock() {
-  const aliases = ALIAS_MANAGERS.map(m => `alias ${m} 'darkfall ${m}'`).join('\n')
+  const aliases = ALIAS_MANAGERS.map(m => `alias ${m} 'gatepost ${m}'`).join('\n')
   return `\n${MARKER_START}\n${aliases}\n${MARKER_END}\n`
 }
 
 /**
  * Build alias block for PowerShell / PowerShell Core.
- * Uses functions that forward to `darkfall <manager>`.
+ * Uses functions that forward to `gatepost <manager>`.
  * Python/python3 get conditional wrappers for `-m pip`.
  */
 function buildPowerShellBlock() {
   const functions = ALIAS_MANAGERS.map(m =>
-    `function ${m} { darkfall ${m} @args }`
+    `function ${m} { gatepost ${m} @args }`
   ).join('\n')
   const pythonFn = `
-function python { if ($args[0] -eq '-m' -and ($args[1] -eq 'pip' -or $args[1] -eq 'pip3')) { darkfall python @args } else { & (Get-Command python -CommandType Application | Select-Object -First 1).Source @args } }
-function python3 { if ($args[0] -eq '-m' -and ($args[1] -eq 'pip' -or $args[1] -eq 'pip3')) { darkfall python3 @args } else { & (Get-Command python3 -CommandType Application | Select-Object -First 1).Source @args } }`
+function python { if ($args[0] -eq '-m' -and ($args[1] -eq 'pip' -or $args[1] -eq 'pip3')) { gatepost python @args } else { & (Get-Command python -CommandType Application | Select-Object -First 1).Source @args } }
+function python3 { if ($args[0] -eq '-m' -and ($args[1] -eq 'pip' -or $args[1] -eq 'pip3')) { gatepost python3 @args } else { & (Get-Command python3 -CommandType Application | Select-Object -First 1).Source @args } }`
   return `\n${MARKER_START}\n${functions}${pythonFn}\n${MARKER_END}\n`
 }
 
@@ -162,7 +162,8 @@ function setup() {
   try {
     const tty = fs.createWriteStream('/dev/tty')
     tty.write('\x1b[2J\x1b[H')
-    tty.write('\n\x1b[35;1mDarkfall\x1b[0m \x1b[90mhas been installed\x1b[0m \x1b[92msuccessfully\x1b[0m\n\n')
+    tty.write('\n\x1b[35;1mGatepost\x1b[0m \x1b[90mhas been installed\x1b[0m \x1b[92msuccessfully\x1b[0m\n\n')
+    tty.write('\x1b[90mRun \x1b[1mgatepost init\x1b[0m\x1b[90m to configure your settings\x1b[0m\n')
     tty.write('\x1b[90mRestart your terminal or run: source ~/.zshrc\x1b[0m\n')
     tty.end()
   } catch (e) {
@@ -197,18 +198,18 @@ function remove() {
   }
 
   if (removed === 0) {
-    console.log('No Darkfall aliases found to remove.')
+    console.log('No Gatepost aliases found to remove.')
   } else {
-    console.log('\nDarkfall removed. Restart your terminal to apply.')
+    console.log('\nGatepost removed. Restart your terminal to apply.')
   }
 }
 
 // ── CI/CD shim setup ────────────────────────────────────────────────
 
 /**
- * Create executable shims in ~/.darkfall/bin for CI/CD environments.
- * Each shim is a tiny shell script that forwards to `darkfall <manager>`.
- * Add ~/.darkfall/bin to the front of PATH in your CI config.
+ * Create executable shims in ~/.gatepost/bin for CI/CD environments.
+ * Each shim is a tiny shell script that forwards to `gatepost <manager>`.
+ * Add ~/.gatepost/bin to the front of PATH in your CI config.
  */
 function setupCi() {
   fs.mkdirSync(SHIM_DIR, { recursive: true })
@@ -216,7 +217,7 @@ function setupCi() {
   let created = 0
   for (const manager of MANAGERS) {
     const shimPath = path.join(SHIM_DIR, manager)
-    const script = `#!/bin/sh\nexec darkfall ${manager} "$@"\n`
+    const script = `#!/bin/sh\nexec gatepost ${manager} "$@"\n`
     fs.writeFileSync(shimPath, script, { mode: 0o755 })
     created++
   }

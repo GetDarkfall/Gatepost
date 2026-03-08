@@ -1,15 +1,15 @@
 'use strict'
 
 /**
- * Configuration loader for Darkfall.
+ * Configuration loader for Gatepost.
  *
- * Reads settings from ~/.darkfallrc (JSON) and merges with defaults.
+ * Reads settings from ~/.gatepostrc (JSON) and merges with defaults.
  * Users can toggle individual checks, adjust thresholds, and add
  * custom blocklist entries without touching source code.
  *
- * Config file location: ~/.darkfallrc
+ * Config file location: ~/.gatepostrc
  *
- * Example .darkfallrc:
+ * Example .gatepostrc:
  * {
  *   "checks": {
  *     "blocklist": true,
@@ -50,6 +50,8 @@ const DEFAULTS = {
     typosquat: true,
     vulnerability: true,
     age: true,
+    scripts: true,
+    maintainer: true,
   },
 
   // Package age check — flag packages published less than N days ago
@@ -75,6 +77,16 @@ const DEFAULTS = {
     action: 'warn',       // 'warn' or 'block'
   },
 
+  // Install script detection (preinstall/postinstall hooks)
+  scripts: {
+    action: 'warn',       // 'warn' or 'block'
+  },
+
+  // Maintainer change detection (new publisher on latest version)
+  maintainer: {
+    action: 'warn',       // 'warn' or 'block'
+  },
+
   // Packages that skip ALL checks (exact name match)
   allowlist: [],
 
@@ -90,7 +102,7 @@ const DEFAULTS = {
 }
 
 // ── Config file path ─────────────────────────────────────────────────
-const CONFIG_PATH = path.join(os.homedir(), '.darkfallrc')
+const CONFIG_PATH = path.join(os.homedir(), '.gatepostrc')
 
 /**
  * Deep-merge two objects. Source values override target values.
@@ -112,7 +124,7 @@ function deepMerge(target, source) {
 }
 
 /**
- * Load configuration from ~/.darkfallrc and merge with defaults.
+ * Load configuration from ~/.gatepostrc and merge with defaults.
  * Returns defaults silently if the config file doesn't exist or is invalid.
  */
 function loadConfig() {
@@ -128,8 +140,8 @@ function loadConfig() {
 }
 
 /**
- * Write a default .darkfallrc to the user's home directory.
- * Used by `darkfall init` to scaffold the config file.
+ * Write a default .gatepostrc to the user's home directory.
+ * Used by `gatepost init` to scaffold the config file.
  */
 function writeDefaultConfig() {
   if (fs.existsSync(CONFIG_PATH)) {

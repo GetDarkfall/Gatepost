@@ -123,7 +123,7 @@ function extractPackages(manager, args) {
 
 /**
  * Pass through to the real package manager binary.
- * Strips the .darkfall shim directory from PATH to prevent recursion.
+ * Strips the .gatepost shim directory from PATH to prevent recursion.
  *
  * @param {string}   manager - Package manager name
  * @param {string[]} args    - Arguments to forward
@@ -134,7 +134,7 @@ function passThrough(manager, args) {
     env: {
       ...process.env,
       PATH: (process.env.PATH || '').split(':')
-        .filter(p => !p.includes('.darkfall'))
+        .filter(p => !p.includes('.gatepost'))
         .join(':'),
     },
   })
@@ -142,7 +142,7 @@ function passThrough(manager, args) {
 }
 
 /**
- * Run a package manager with Darkfall security checks.
+ * Run a package manager with Gatepost security checks.
  *
  * Flow:
  *   1. Determine if this is an install command
@@ -155,7 +155,7 @@ function passThrough(manager, args) {
  * @param {string}   manager      - Package manager name
  * @param {string[]} args         - CLI arguments after the manager name
  * @param {Function} checkPackages - Check function from checks/index.js
- * @param {Object}   config       - Darkfall configuration
+ * @param {Object}   config       - Gatepost configuration
  */
 async function runWrapped(manager, args, checkPackages, config) {
   // python/python3 — only intercept `-m pip install`, pass everything else through
@@ -191,8 +191,8 @@ async function runWrapped(manager, args, checkPackages, config) {
   }
 
   const ecosystem = ECOSYSTEMS[manager] || 'npm'
-  log.info(c.dim(`darkfall: checking ${pkgs.join(', ')}...\n`))
-  log.verbose(c.dim(`darkfall: ecosystem=${ecosystem}, manager=${manager}, packages=[${pkgs.join(', ')}]\n`))
+  log.info(c.dim(`gatepost: checking ${pkgs.join(', ')}...\n`))
+  log.verbose(c.dim(`gatepost: ecosystem=${ecosystem}, manager=${manager}, packages=[${pkgs.join(', ')}]\n`))
 
   let results
   try {
@@ -200,10 +200,10 @@ async function runWrapped(manager, args, checkPackages, config) {
   } catch {
     // Network failure — warn and proceed (or block if failOpen is false)
     if (config.failOpen) {
-      log.warn(c.purple('darkfall: security check failed (network error), proceeding anyway\n'))
+      log.warn(c.orange('gatepost: security check failed (network error), proceeding anyway\n'))
       return passThrough(manager, args)
     } else {
-      log.error(c.red('darkfall: security check failed (network error), blocking install\n'))
+      log.error(c.red('gatepost: security check failed (network error), blocking install\n'))
       process.exit(1)
     }
   }
@@ -214,7 +214,7 @@ async function runWrapped(manager, args, checkPackages, config) {
   )
 
   if (blocked.length > 0) {
-    log.error(c.purple(c.bold('\ndarkfall: install blocked\n')))
+    log.error(c.purple(c.bold('\ngatepost: install blocked\n')))
     for (const r of blocked) {
       for (const issue of r.issues) {
         log.error(`  ${c.red('blocked')}  ${c.bold(r.pkg)}  ${issue.message}\n`)
@@ -225,16 +225,16 @@ async function runWrapped(manager, args, checkPackages, config) {
   }
 
   if (warned.length > 0) {
-    log.warn(c.purple(c.bold('\ndarkfall: warning\n')))
+    log.warn(c.orange(c.bold('\ngatepost: warning\n')))
     for (const r of warned) {
       for (const issue of r.issues) {
-        log.warn(`  ${c.purple('warn')}  ${c.bold(r.pkg)}  ${issue.message}\n`)
+        log.warn(`  ${c.orange('warn')}  ${c.bold(r.pkg)}  ${issue.message}\n`)
       }
     }
     log.warn('\n')
   }
 
-  log.verbose(c.dim(`darkfall: all checks passed, forwarding to ${manager}\n`))
+  log.verbose(c.dim(`gatepost: all checks passed, forwarding to ${manager}\n`))
   passThrough(manager, args)
 }
 

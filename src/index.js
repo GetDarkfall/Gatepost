@@ -2,7 +2,7 @@
 'use strict'
 
 /**
- * Darkfall — supply chain security for package managers.
+ * Gatepost — supply chain security for package managers.
  *
  * This is the CLI entry point. All logic lives in dedicated modules:
  *   src/cli.js          — CLI router and help

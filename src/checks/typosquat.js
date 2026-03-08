@@ -41,7 +41,7 @@ function levenshtein(a, b) {
  *
  * @param {string} pkgName    - Package name to check
  * @param {string} ecosystem  - Package ecosystem (e.g. 'npm', 'PyPI')
- * @param {Object} config     - Darkfall configuration object
+ * @param {Object} config     - Gatepost configuration object
  * @returns {Object|null}       Issue object if suspicious, null if clean
  */
 function check(pkgName, ecosystem, config) {

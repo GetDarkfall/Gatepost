@@ -15,6 +15,8 @@ const blocklist = require('./blocklist')
 const typosquat = require('./typosquat')
 const vulnerability = require('./vulnerability')
 const age = require('./age')
+const scripts = require('./scripts')
+const maintainer = require('./maintainer')
 
 /**
  * Parse the canonical package name from an install argument.
@@ -53,7 +55,7 @@ function isPackageName(arg) {
  *
  * @param {string} arg        - Raw install argument (e.g. 'lodash@4.x')
  * @param {string} ecosystem  - Package ecosystem
- * @param {Object} config     - Darkfall configuration object
+ * @param {Object} config     - Gatepost configuration object
  * @returns {Promise<Object>}   { pkg: string, issues: Object[] }
  */
 async function checkPackage(arg, ecosystem, config) {
@@ -71,6 +73,8 @@ async function checkPackage(arg, ecosystem, config) {
     typosquat.check(pkgName, ecosystem, config),
     vulnerability.check(pkgName, ecosystem, config),
     age.check(pkgName, ecosystem, config),
+    scripts.check(pkgName, ecosystem, config),
+    maintainer.check(pkgName, ecosystem, config),
   ])
 
   // Filter out null results (clean checks)
@@ -84,7 +88,7 @@ async function checkPackage(arg, ecosystem, config) {
  *
  * @param {string[]} args      - Raw install arguments
  * @param {string}   ecosystem - Package ecosystem
- * @param {Object}   config    - Darkfall configuration object
+ * @param {Object}   config    - Gatepost configuration object
  * @returns {Promise<Object[]>}  Array of { pkg, issues } results
  */
 async function checkPackages(args, ecosystem = 'npm', config) {

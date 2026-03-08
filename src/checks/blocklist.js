@@ -5,7 +5,7 @@
  *
  * Compares a package name against the hard-coded blocklist of known
  * malicious packages, plus any user-defined custom entries from
- * the .darkfallrc configuration file.
+ * the .gatepostrc configuration file.
  */
 
 const { BLOCKLIST } = require('../data/blocklist')
@@ -14,7 +14,7 @@ const { BLOCKLIST } = require('../data/blocklist')
  * Check a package against the blocklist.
  *
  * @param {string} pkgName  - Package name to check
- * @param {Object} config   - Darkfall configuration object
+ * @param {Object} config   - Gatepost configuration object
  * @returns {Object|null}     Issue object if blocked, null if clean
  */
 function check(pkgName, config) {
