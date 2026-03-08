@@ -84,6 +84,9 @@ const DEFAULTS = {
   // If true, proceed with install when network checks fail
   // If false, block install when checks can't be completed
   failOpen: true,
+
+  // Logging level: 'silent', 'normal', or 'verbose'
+  logLevel: 'normal',
 }
 
 // ── Config file path ─────────────────────────────────────────────────

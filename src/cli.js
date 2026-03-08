@@ -10,10 +10,12 @@
  *   - <manager>: wrapped package manager
  */
 
-const { setup, remove } = require('./setup')
-const { runWrapped, MANAGERS, c } = require('./runner')
+const { setup, remove, setupCi } = require('./setup')
+const { runWrapped, MANAGERS } = require('./runner')
 const { checkPackages } = require('./checks')
 const { loadConfig, writeDefaultConfig, CONFIG_PATH } = require('./config')
+const log = require('./utils/logger')
+const { c } = require('./utils/colors')
 
 // ── Help text ────────────────────────────────────────────────────────
 
@@ -23,13 +25,19 @@ ${c.bold('darkfall')} — secure your package installs
 
 ${c.bold('Usage:')}
   darkfall setup              Install shell aliases (run once)
-  darkfall remove             Remove shell aliases
+  darkfall setup --ci         Install PATH shims for CI/CD environments
+  darkfall remove             Remove shell aliases (and CI shims)
   darkfall init               Create a .darkfallrc config file
   darkfall check <pkg...>     Manually check packages
   darkfall <manager> [args]   Run a package manager with protection
 
+${c.bold('Options:')}
+  --silent                    Only show blocked installs
+  --verbose                   Show detailed diagnostic output
+
 ${c.bold('Examples:')}
   darkfall setup
+  darkfall setup --ci
   darkfall npm install lodash
   darkfall check express axios
   darkfall init
@@ -38,6 +46,7 @@ ${c.bold('Supported managers:')}
   npm, npx, yarn, pnpm, pnpx, bun, bunx
   pip, pip3, uv, poetry, pipx
   gem, cargo, composer, mix, pub
+  python -m pip, python3 -m pip
 
 ${c.bold('Configuration:')}
   Run ${c.bold('darkfall init')} to create ~/.darkfallrc
@@ -56,7 +65,7 @@ async function manualCheck(pkgs, config) {
     process.exit(1)
   }
 
-  console.log(c.dim(`Checking ${pkgs.length} package(s) against blocklist, typosquatting, OSV, and age...\n`))
+  log.info(c.dim(`Checking ${pkgs.length} package(s) against blocklist, typosquatting, OSV, and age...\n`))
 
   const results = await checkPackages(pkgs, 'npm', config)
 
@@ -93,14 +102,33 @@ function initConfig() {
 // ── Main router ──────────────────────────────────────────────────────
 
 function run() {
-  const args = process.argv.slice(2)
-  const command = args[0]
+  const rawArgs = process.argv.slice(2)
+
+  // Parse global flags before dispatching
+  const flags = rawArgs.filter(a => a === '--silent' || a === '--verbose')
+  const args = rawArgs.filter(a => a !== '--silent' && a !== '--verbose')
+
   const config = loadConfig()
+
+  // CLI flags override config file
+  if (flags.includes('--silent')) {
+    log.setLevel('silent')
+  } else if (flags.includes('--verbose')) {
+    log.setLevel('verbose')
+  } else {
+    log.setLevel(config.logLevel || 'normal')
+  }
+
+  const command = args[0]
 
   if (!command || command === '--help' || command === '-h') {
     printHelp()
   } else if (command === 'setup') {
-    setup()
+    if (args.includes('--ci')) {
+      setupCi()
+    } else {
+      setup()
+    }
   } else if (command === 'remove' || command === 'uninstall') {
     remove()
   } else if (command === 'init') {

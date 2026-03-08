@@ -13,6 +13,8 @@ Supply chain security for every package manager. Scans installs for malware, typ
 
 If a package is flagged, the install is blocked. If it's clean, Darkfall steps aside — zero friction.
 
+Works in CI/CD pipelines. Supports silent and verbose logging modes.
+
 ---
 
 ## Supported package managers
@@ -20,7 +22,7 @@ If a package is flagged, the install is blocked. If it's clean, Darkfall steps a
 | Ecosystem | Managers |
 |---|---|
 | **Node / JS** | `npm`, `npx`, `yarn`, `pnpm`, `pnpx`, `bun`, `bunx` |
-| **Python** | `pip`, `pip3`, `uv`, `poetry`, `pipx` |
+| **Python** | `pip`, `pip3`, `uv`, `poetry`, `pipx`, `python -m pip` |
 | **Ruby** | `gem` |
 | **Rust** | `cargo` |
 | **PHP** | `composer` |
@@ -53,6 +55,18 @@ npm install -g .
 
 Shell aliases are set up automatically. Restart your terminal and every package manager command is protected.
 
+### CI/CD
+
+For CI pipelines (GitHub Actions, GitLab, CircleCI, Jenkins, Azure, Bitbucket):
+
+```sh
+npm install -g @getbastionai/gatepost
+darkfall setup --ci
+export PATH="$HOME/.darkfall/bin:$PATH"
+```
+
+This creates lightweight shims in `~/.darkfall/bin` instead of shell aliases — works in any CI environment.
+
 ---
 
 ## Usage
@@ -62,11 +76,25 @@ Use your package managers exactly as you normally would:
 ```sh
 npm install lodash
 pip install requests
+python -m pip install flask
 cargo add serde
 gem install rails
 ```
 
 Darkfall runs silently when everything is clean. Output only appears when something is flagged.
+
+### Logging modes
+
+```sh
+darkfall --silent npm install lodash    # Only show blocked installs
+darkfall --verbose npm install lodash   # Show detailed diagnostic output
+```
+
+Or set the default in `~/.darkfallrc`:
+
+```json
+{ "logLevel": "silent" }
+```
 
 ### Blocked install
 
@@ -142,7 +170,8 @@ This creates `~/.darkfallrc` where you can:
     "custom": ["some-internal-package"]
   },
   "allowlist": ["my-trusted-package"],
-  "failOpen": true
+  "failOpen": true,
+  "logLevel": "normal"
 }
 ```
 
@@ -153,10 +182,16 @@ This creates `~/.darkfallrc` where you can:
 | Command | Description |
 |---|---|
 | `darkfall setup` | Add shell aliases (run once after install) |
-| `darkfall remove` | Remove shell aliases |
+| `darkfall setup --ci` | Install PATH shims for CI/CD pipelines |
+| `darkfall remove` | Remove shell aliases and CI shims |
 | `darkfall init` | Create a `.darkfallrc` config file |
 | `darkfall check <pkg...>` | Scan packages without installing |
 | `darkfall <manager> [args]` | Run any manager with protection |
+
+| Flag | Effect |
+|---|---|
+| `--silent` | Only show blocked installs |
+| `--verbose` | Show detailed diagnostic output |
 
 ---
 

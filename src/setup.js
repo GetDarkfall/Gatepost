@@ -10,6 +10,8 @@
  *   - Fish   (~/.config/fish/config.fish)
  *   - Ksh    (~/.kshrc)
  *   - Tcsh   (~/.tcshrc, ~/.cshrc)
+ *   - PowerShell      (~/.config/powershell/Microsoft.PowerShell_profile.ps1)
+ *   - PowerShell Core (Documents/PowerShell/Microsoft.PowerShell_profile.ps1)
  */
 
 const fs = require('fs')
@@ -20,41 +22,70 @@ const MANAGERS = [
   'npm', 'npx', 'yarn', 'pnpm', 'pnpx', 'bun', 'bunx',
   'pip', 'pip3', 'uv', 'poetry', 'pipx',
   'gem', 'cargo', 'composer', 'mix', 'pub',
+  'python', 'python3',
 ]
+
+const SHIM_DIR = path.join(os.homedir(), '.darkfall', 'bin')
 
 const MARKER_START = '# darkfall-start'
 const MARKER_END = '# darkfall-end'
 
 // ── Alias block builders ─────────────────────────────────────────────
 
+// Managers that get simple aliases (everything except python/python3)
+const ALIAS_MANAGERS = MANAGERS.filter(m => m !== 'python' && m !== 'python3')
+
 /**
  * Build alias block for POSIX-compatible shells (zsh, bash, ksh).
- * Uses standard `alias name='command'` syntax.
+ * Uses standard aliases for package managers, and a wrapper function
+ * for python/python3 that only intercepts `-m pip` invocations.
  */
 function buildPosixBlock() {
-  const aliases = MANAGERS.map(m => `alias ${m}='darkfall ${m}'`).join('\n')
-  return `\n${MARKER_START}\n${aliases}\n${MARKER_END}\n`
+  const aliases = ALIAS_MANAGERS.map(m => `alias ${m}='darkfall ${m}'`).join('\n')
+  const pythonFn = `
+python() { case "$1" in -m) case "$2" in pip|pip3) darkfall python "$@"; return;; esac;; esac; command python "$@"; }
+python3() { case "$1" in -m) case "$2" in pip|pip3) darkfall python3 "$@"; return;; esac;; esac; command python3 "$@"; }`
+  return `\n${MARKER_START}\n${aliases}${pythonFn}\n${MARKER_END}\n`
 }
 
 /**
  * Build alias block for Fish shell.
- * Fish uses `alias name 'command'` without the equals sign,
- * and functions need `$argv` to pass arguments.
+ * Fish uses function syntax with $argv to pass arguments.
  */
 function buildFishBlock() {
-  const functions = MANAGERS.map(m =>
+  const functions = ALIAS_MANAGERS.map(m =>
     `function ${m} --wraps='${m}' --description 'darkfall-wrapped ${m}'; darkfall ${m} $argv; end`
   ).join('\n')
-  return `\n${MARKER_START}\n${functions}\n${MARKER_END}\n`
+  const pythonFn = `
+function python --wraps='python' --description 'darkfall-wrapped python'; if test "$argv[1]" = "-m"; and contains -- "$argv[2]" pip pip3; darkfall python $argv; else; command python $argv; end; end
+function python3 --wraps='python3' --description 'darkfall-wrapped python3'; if test "$argv[1]" = "-m"; and contains -- "$argv[2]" pip pip3; darkfall python3 $argv; else; command python3 $argv; end; end`
+  return `\n${MARKER_START}\n${functions}${pythonFn}\n${MARKER_END}\n`
 }
 
 /**
  * Build alias block for C-shell family (tcsh, csh).
  * Uses `alias name 'command'` syntax.
+ * Note: csh can't do conditional aliases easily, so python -m pip
+ * is not intercepted in csh — users can run `darkfall python -m pip` directly.
  */
 function buildCshBlock() {
-  const aliases = MANAGERS.map(m => `alias ${m} 'darkfall ${m}'`).join('\n')
+  const aliases = ALIAS_MANAGERS.map(m => `alias ${m} 'darkfall ${m}'`).join('\n')
   return `\n${MARKER_START}\n${aliases}\n${MARKER_END}\n`
+}
+
+/**
+ * Build alias block for PowerShell / PowerShell Core.
+ * Uses functions that forward to `darkfall <manager>`.
+ * Python/python3 get conditional wrappers for `-m pip`.
+ */
+function buildPowerShellBlock() {
+  const functions = ALIAS_MANAGERS.map(m =>
+    `function ${m} { darkfall ${m} @args }`
+  ).join('\n')
+  const pythonFn = `
+function python { if ($args[0] -eq '-m' -and ($args[1] -eq 'pip' -or $args[1] -eq 'pip3')) { darkfall python @args } else { & (Get-Command python -CommandType Application | Select-Object -First 1).Source @args } }
+function python3 { if ($args[0] -eq '-m' -and ($args[1] -eq 'pip' -or $args[1] -eq 'pip3')) { darkfall python3 @args } else { & (Get-Command python3 -CommandType Application | Select-Object -First 1).Source @args } }`
+  return `\n${MARKER_START}\n${functions}${pythonFn}\n${MARKER_END}\n`
 }
 
 // ── Shell config discovery ───────────────────────────────────────────
@@ -78,6 +109,12 @@ function getShellConfigs() {
     // C-shell family
     { path: path.join(home, '.tcshrc'),         type: 'csh' },
     { path: path.join(home, '.cshrc'),          type: 'csh' },
+    // PowerShell Core (cross-platform)
+    { path: path.join(home, '.config', 'powershell', 'Microsoft.PowerShell_profile.ps1'), type: 'powershell' },
+    // PowerShell (Windows)
+    { path: path.join(home, 'Documents', 'PowerShell', 'Microsoft.PowerShell_profile.ps1'), type: 'powershell' },
+    // Windows PowerShell (legacy)
+    { path: path.join(home, 'Documents', 'WindowsPowerShell', 'Microsoft.PowerShell_profile.ps1'), type: 'powershell' },
   ]
   return configs.filter(c => fs.existsSync(c.path))
 }
@@ -87,9 +124,10 @@ function getShellConfigs() {
  */
 function getBlockForType(type) {
   switch (type) {
-    case 'fish': return buildFishBlock()
-    case 'csh':  return buildCshBlock()
-    default:     return buildPosixBlock()
+    case 'fish':       return buildFishBlock()
+    case 'csh':        return buildCshBlock()
+    case 'powershell': return buildPowerShellBlock()
+    default:           return buildPosixBlock()
   }
 }
 
@@ -151,6 +189,13 @@ function remove() {
     }
   }
 
+  // Also remove CI shims if present
+  if (fs.existsSync(SHIM_DIR)) {
+    fs.rmSync(SHIM_DIR, { recursive: true })
+    console.log(`  Removed CI shims from: ${SHIM_DIR}`)
+    removed++
+  }
+
   if (removed === 0) {
     console.log('No Darkfall aliases found to remove.')
   } else {
@@ -158,4 +203,37 @@ function remove() {
   }
 }
 
-module.exports = { setup, remove }
+// ── CI/CD shim setup ────────────────────────────────────────────────
+
+/**
+ * Create executable shims in ~/.darkfall/bin for CI/CD environments.
+ * Each shim is a tiny shell script that forwards to `darkfall <manager>`.
+ * Add ~/.darkfall/bin to the front of PATH in your CI config.
+ */
+function setupCi() {
+  fs.mkdirSync(SHIM_DIR, { recursive: true })
+
+  let created = 0
+  for (const manager of MANAGERS) {
+    const shimPath = path.join(SHIM_DIR, manager)
+    const script = `#!/bin/sh\nexec darkfall ${manager} "$@"\n`
+    fs.writeFileSync(shimPath, script, { mode: 0o755 })
+    created++
+  }
+
+  console.log(`Created ${created} shims in ${SHIM_DIR}`)
+  console.log(`\nAdd this to your CI config:`)
+  console.log(`  export PATH="${SHIM_DIR}:$PATH"`)
+}
+
+/**
+ * Remove CI shims directory.
+ */
+function removeCi() {
+  if (fs.existsSync(SHIM_DIR)) {
+    fs.rmSync(SHIM_DIR, { recursive: true })
+    console.log(`Removed shims from ${SHIM_DIR}`)
+  }
+}
+
+module.exports = { setup, remove, setupCi, removeCi }

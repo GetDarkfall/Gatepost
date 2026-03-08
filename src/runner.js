@@ -9,6 +9,8 @@
  */
 
 const { spawnSync } = require('child_process')
+const log = require('./utils/logger')
+const { c } = require('./utils/colors')
 
 // ── Supported managers and their ecosystems ──────────────────────────
 
@@ -16,12 +18,14 @@ const MANAGERS = [
   'npm', 'npx', 'yarn', 'pnpm', 'pnpx', 'bun', 'bunx',
   'pip', 'pip3', 'uv', 'poetry', 'pipx',
   'gem', 'cargo', 'composer', 'mix', 'pub',
+  'python', 'python3',
 ]
 
 const ECOSYSTEMS = {
   npm: 'npm', npx: 'npm', yarn: 'npm', pnpm: 'npm', pnpx: 'npm',
   bun: 'npm', bunx: 'npm',
   pip: 'PyPI', pip3: 'PyPI', uv: 'PyPI', poetry: 'PyPI', pipx: 'PyPI',
+  python: 'PyPI', python3: 'PyPI',
   gem: 'RubyGems',
   cargo: 'crates.io',
   composer: 'Packagist',
@@ -48,16 +52,8 @@ const INSTALL_SUBCMDS = {
   composer: ['require'],
   mix:      ['deps.get'],
   pub:      ['add', 'get'],
-}
-
-// ── ANSI colors ──────────────────────────────────────────────────────
-
-const c = {
-  red:    s => `\x1b[31m${s}\x1b[0m`,
-  purple: s => `\x1b[35m${s}\x1b[0m`,
-  green:  s => `\x1b[32m${s}\x1b[0m`,
-  bold:   s => `\x1b[1m${s}\x1b[0m`,
-  dim:    s => `\x1b[2m${s}\x1b[0m`,
+  python:   ['-m pip install', '-m pip'],
+  python3:  ['-m pip install', '-m pip'],
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────
@@ -83,6 +79,18 @@ function extractPackages(manager, args) {
   if (['npx', 'pnpx', 'bunx'].includes(manager)) {
     const pkg = args.find(a => !a.startsWith('-'))
     return pkg ? [pkg] : []
+  }
+
+  // python -m pip install pkg → extract packages after 'install'
+  if (['python', 'python3'].includes(manager)) {
+    const mIdx = args.indexOf('-m')
+    if (mIdx === -1) return []
+    const pipIdx = mIdx + 1
+    if (args[pipIdx] !== 'pip') return []
+    const installIdx = args.indexOf('install', pipIdx)
+    if (installIdx === -1) return []
+    const rest = args.slice(installIdx + 1)
+    return rest.filter(a => !a.startsWith('-')).map(stripPythonVersion)
   }
 
   // uv has two install forms: `uv add pkg` and `uv pip install pkg`
@@ -150,16 +158,29 @@ function passThrough(manager, args) {
  * @param {Object}   config       - Darkfall configuration
  */
 async function runWrapped(manager, args, checkPackages, config) {
+  // python/python3 — only intercept `-m pip install`, pass everything else through
+  if (['python', 'python3'].includes(manager)) {
+    const joined = args.join(' ')
+    if (!joined.includes('-m pip') && !joined.includes('-m pip install')) {
+      return passThrough(manager, args)
+    }
+    if (!args.includes('install')) {
+      return passThrough(manager, args)
+    }
+  }
+
   const installSubcmds = INSTALL_SUBCMDS[manager]
   const subCmd = args[0]
 
   // Not an install command — pass straight through
-  const isInstall = installSubcmds === null
-    ? true
-    : installSubcmds.includes(subCmd)
+  if (!['python', 'python3'].includes(manager)) {
+    const isInstall = installSubcmds === null
+      ? true
+      : installSubcmds.includes(subCmd)
 
-  if (!isInstall) {
-    return passThrough(manager, args)
+    if (!isInstall) {
+      return passThrough(manager, args)
+    }
   }
 
   const pkgs = extractPackages(manager, args)
@@ -170,7 +191,8 @@ async function runWrapped(manager, args, checkPackages, config) {
   }
 
   const ecosystem = ECOSYSTEMS[manager] || 'npm'
-  process.stderr.write(c.dim(`darkfall: checking ${pkgs.join(', ')}...\n`))
+  log.info(c.dim(`darkfall: checking ${pkgs.join(', ')}...\n`))
+  log.verbose(c.dim(`darkfall: ecosystem=${ecosystem}, manager=${manager}, packages=[${pkgs.join(', ')}]\n`))
 
   let results
   try {
@@ -178,10 +200,10 @@ async function runWrapped(manager, args, checkPackages, config) {
   } catch {
     // Network failure — warn and proceed (or block if failOpen is false)
     if (config.failOpen) {
-      process.stderr.write(c.purple('darkfall: security check failed (network error), proceeding anyway\n'))
+      log.warn(c.purple('darkfall: security check failed (network error), proceeding anyway\n'))
       return passThrough(manager, args)
     } else {
-      process.stderr.write(c.red('darkfall: security check failed (network error), blocking install\n'))
+      log.error(c.red('darkfall: security check failed (network error), blocking install\n'))
       process.exit(1)
     }
   }
@@ -192,27 +214,28 @@ async function runWrapped(manager, args, checkPackages, config) {
   )
 
   if (blocked.length > 0) {
-    console.error(c.purple(c.bold('\ndarkfall: install blocked\n')))
+    log.error(c.purple(c.bold('\ndarkfall: install blocked\n')))
     for (const r of blocked) {
       for (const issue of r.issues) {
-        console.error(`  ${c.red('blocked')}  ${c.bold(r.pkg)}  ${issue.message}`)
+        log.error(`  ${c.red('blocked')}  ${c.bold(r.pkg)}  ${issue.message}\n`)
       }
     }
-    console.error('')
+    log.error('\n')
     process.exit(1)
   }
 
   if (warned.length > 0) {
-    console.error(c.purple(c.bold('\ndarkfall: warning\n')))
+    log.warn(c.purple(c.bold('\ndarkfall: warning\n')))
     for (const r of warned) {
       for (const issue of r.issues) {
-        console.error(`  ${c.purple('warn')}  ${c.bold(r.pkg)}  ${issue.message}`)
+        log.warn(`  ${c.purple('warn')}  ${c.bold(r.pkg)}  ${issue.message}\n`)
       }
     }
-    console.error('')
+    log.warn('\n')
   }
 
+  log.verbose(c.dim(`darkfall: all checks passed, forwarding to ${manager}\n`))
   passThrough(manager, args)
 }
 
-module.exports = { runWrapped, passThrough, MANAGERS, ECOSYSTEMS, c }
+module.exports = { runWrapped, passThrough, MANAGERS, ECOSYSTEMS }
