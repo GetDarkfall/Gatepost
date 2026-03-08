@@ -49,11 +49,16 @@ function setup() {
     }
   }
 
-  if (updated > 0) {
-    console.log('\nGatepost is set up. Restart your terminal or run:')
-    console.log('  source ~/.zshrc\n')
-    console.log('After that, npm, npx, yarn, pnpm, and pnpx will be protected automatically.')
-  }
+  process.stdout.write('\x1b[2J\x1b[H')
+  process.stdout.write('\x1b[93m\n')
+  process.stdout.write('   ____       _                       _   \n')
+  process.stdout.write('  / ___| __ _| |_ ___ _ __   ___  ___| |_ \n')
+  process.stdout.write(' | |  _ / _` | __/ _ \\ \'_ \\ / _ \\/ __| __|\n')
+  process.stdout.write(' | |_| | (_| | ||  __/ |_) | (_) \\__ \\ |_ \n')
+  process.stdout.write('  \\____|\\__,_|\\__\\___| .__/ \\___/|___/\\__|\n')
+  process.stdout.write('                     |_|                  \n')
+  process.stdout.write('\x1b[0m\n')
+  process.stdout.write('\x1b[37mDone. Restart your terminal or run: source ~/.zshrc\x1b[0m\n')
 }
 
 function remove() {
