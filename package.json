@@ -1,12 +1,12 @@
 {
   "name": "@getbastionai/gatepost",
-  "version": "1.0.8",
+  "version": "1.1.0",
   "description": "Wraps npm, npx, yarn, pnpm, and pnpx to block malicious packages in real-time",
   "scripts": {
     "postinstall": "node ./src/index.js setup"
   },
   "bin": {
-    "gatepost": "./src/index.js"
+    "darkfall": "./src/index.js"
   },
   "files": [
     "src/",
