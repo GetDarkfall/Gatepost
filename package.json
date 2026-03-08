@@ -1,7 +1,7 @@
 {
   "name": "@getbastionai/gatepost",
-  "version": "1.1.0",
-  "description": "Wraps npm, npx, yarn, pnpm, and pnpx to block malicious packages in real-time",
+  "version": "1.0.0",
+  "description": "Supply chain security for 17 package managers. Blocks malware, typosquats, and vulnerabilities before they install.",
   "scripts": {
     "postinstall": "node ./src/index.js setup"
   },
@@ -27,6 +27,6 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/GetBastion/gatepost.git"
+    "url": "https://github.com/GetDarkfall/Gatepost.git"
   }
 }
