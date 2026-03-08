@@ -1,28 +1,44 @@
-![Gatepost Banner](Image.png)
+<p align="center">
+  <img src="Image.png" alt="Gatepost" width="100%" />
+</p>
 
-# Gatepost
+<h3 align="center">Supply chain security for every package manager.</h3>
 
-Supply chain security for every package manager. Scans installs for malware, typosquats, vulnerabilities, and suspiciously new packages — before they touch your machine.
+<p align="center">
+  Scans every install for malware, typosquats, CVEs, hijacked maintainers, and suspicious install scripts — before anything touches your machine.
+</p>
 
-| Check | What it catches |
-|---|---|
-| **Blocklist** | Known malicious packages by name |
-| **Typosquat detection** | Lookalikes of popular packages (e.g. `lodahs` → `lodash`) |
-| **CVE scanning** | Live vulnerability lookup via [OSV.dev](https://osv.dev) |
-| **Age detection** | Packages published less than 24 hours ago |
+<p align="center">
+  <b>Zero dependencies. Zero config. Zero friction.</b>
+</p>
 
-If a package is flagged, the install is blocked. If it's clean, Gatepost steps aside — zero friction.
-
-Works in CI/CD pipelines. Supports silent and verbose logging modes.
+<p align="center">
+  <code>npm install -g @getbastionai/gatepost</code>
+</p>
 
 ---
 
-## Supported package managers
+## What it catches
+
+| Check | Description | Default |
+|---|---|---|
+| **Blocklist** | Known malicious packages (89+ entries) | Block |
+| **Typosquat detection** | Levenshtein distance against popular packages | Warn |
+| **CVE scanning** | Live vulnerability lookup via [OSV.dev](https://osv.dev) | Warn |
+| **Package age** | Flags packages published less than 24 hours ago | Warn |
+| **Install scripts** | Detects `preinstall` / `postinstall` hooks | Warn |
+| **Maintainer change** | Flags when the latest version has a new publisher | Warn |
+
+Every check runs in parallel. Clean packages pass through silently.
+
+---
+
+## 17 package managers
 
 | Ecosystem | Managers |
 |---|---|
-| **Node / JS** | `npm`, `npx`, `yarn`, `pnpm`, `pnpx`, `bun`, `bunx` |
-| **Python** | `pip`, `pip3`, `uv`, `poetry`, `pipx`, `python -m pip` |
+| **Node / JS** | `npm` `npx` `yarn` `pnpm` `pnpx` `bun` `bunx` |
+| **Python** | `pip` `pip3` `uv` `poetry` `pipx` `python -m pip` |
 | **Ruby** | `gem` |
 | **Rust** | `cargo` |
 | **PHP** | `composer` |
@@ -31,21 +47,24 @@ Works in CI/CD pipelines. Supports silent and verbose logging modes.
 
 ---
 
-## Installation
-
-### npm (recommended)
+## Install
 
 ```sh
 npm install -g @getbastionai/gatepost
 ```
 
-### curl
+That's it. Shell aliases are configured automatically. Restart your terminal and every package manager is protected.
+
+<details>
+<summary>Other install methods</summary>
+
+**curl**
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/GetDarkfall/Gatepost/master/install.sh | sh
 ```
 
-### From source
+**From source**
 
 ```sh
 git clone https://github.com/GetDarkfall/Gatepost.git
@@ -53,19 +72,7 @@ cd Gatepost
 npm install -g .
 ```
 
-Shell aliases are set up automatically. Restart your terminal and every package manager command is protected.
-
-### CI/CD
-
-For CI pipelines (GitHub Actions, GitLab, CircleCI, Jenkins, Azure, Bitbucket):
-
-```sh
-npm install -g @getbastionai/gatepost
-gatepost setup --ci
-export PATH="$HOME/.gatepost/bin:$PATH"
-```
-
-This creates lightweight shims in `~/.gatepost/bin` instead of shell aliases — works in any CI environment.
+</details>
 
 ---
 
@@ -81,22 +88,7 @@ cargo add serde
 gem install rails
 ```
 
-Gatepost runs silently when everything is clean. Output only appears when something is flagged.
-
-### Logging modes
-
-```sh
-gatepost --silent npm install lodash    # Only show blocked installs
-gatepost --verbose npm install lodash   # Show detailed diagnostic output
-```
-
-Or set the default in `~/.gatepostrc`:
-
-```json
-{ "logLevel": "silent" }
-```
-
-### Blocked install
+When a package is clean, Gatepost is invisible. When something is wrong:
 
 ```
 gatepost: install blocked
@@ -104,17 +96,15 @@ gatepost: install blocked
   blocked  event-stream  Known malicious package
 ```
 
-The install exits with code 1. Nothing was installed.
+Exit code 1. Nothing was installed.
 
-### Warning (install proceeds)
+Warnings print but don't block:
 
 ```
 gatepost: warning
 
   warn  lodahs  Possible typosquat of "lodash"
 ```
-
-Warnings are shown but the install is not blocked.
 
 ---
 
@@ -136,22 +126,51 @@ All packages look clean.
 
 ---
 
-## Configuration
+## Audit lockfiles
 
-Create a config file to customize behavior:
+Scan your project's dependency files in one command:
+
+```sh
+gatepost audit
+```
+
+Parses `package.json`, `requirements.txt`, `Gemfile`, `Cargo.toml`, `composer.json`, `mix.exs`, and `pubspec.yaml` automatically.
+
+```sh
+gatepost audit --json    # Machine-readable output for CI
+```
+
+---
+
+## CI/CD
+
+```yaml
+# GitHub Actions
+- run: npm install -g @getbastionai/gatepost
+- run: gatepost setup --ci
+- run: export PATH="$HOME/.gatepost/bin:$PATH"
+```
+
+Works with GitHub Actions, GitLab CI, CircleCI, Jenkins, Azure Pipelines, and Bitbucket.
+
+PATH shims in `~/.gatepost/bin` replace shell aliases in non-interactive environments.
+
+**JSON output** for pipeline integration:
+
+```sh
+gatepost check express --json
+gatepost audit --json
+```
+
+---
+
+## Configuration
 
 ```sh
 gatepost init
 ```
 
-This creates `~/.gatepostrc` where you can:
-
-- Toggle individual checks on/off
-- Change the age threshold (default: 1 day)
-- Switch actions between `warn` and `block`
-- Add custom blocklist entries
-- Allowlist specific packages
-- Control fail-open/fail-closed behavior
+Interactive setup creates `~/.gatepostrc`:
 
 ```json
 {
@@ -159,21 +178,29 @@ This creates `~/.gatepostrc` where you can:
     "blocklist": true,
     "typosquat": true,
     "vulnerability": true,
-    "age": true
+    "age": true,
+    "scripts": true,
+    "maintainer": true
   },
-  "age": {
-    "minimumDays": 1,
-    "action": "warn"
-  },
-  "blocklist": {
-    "action": "block",
-    "custom": ["some-internal-package"]
-  },
-  "allowlist": ["my-trusted-package"],
+  "age": { "minimumDays": 1, "action": "warn" },
+  "blocklist": { "action": "block", "custom": [] },
+  "allowlist": [],
   "failOpen": true,
   "logLevel": "normal"
 }
 ```
+
+| Option | What it does |
+|---|---|
+| `checks.*` | Toggle individual checks on/off |
+| `age.minimumDays` | How old a package must be (default: 1 day) |
+| `*.action` | Set to `"warn"` or `"block"` per check |
+| `blocklist.custom` | Add your own blocked package names |
+| `allowlist` | Skip all checks for specific packages |
+| `failOpen` | Proceed on network failure (default: true) |
+| `logLevel` | `"silent"` / `"normal"` / `"verbose"` |
+
+CLI flags override config: `--silent`, `--verbose`, `--json`
 
 ---
 
@@ -182,29 +209,31 @@ This creates `~/.gatepostrc` where you can:
 | Command | Description |
 |---|---|
 | `gatepost setup` | Add shell aliases (run once after install) |
-| `gatepost setup --ci` | Install PATH shims for CI/CD pipelines |
-| `gatepost remove` | Remove shell aliases and CI shims |
-| `gatepost init` | Create a `.gatepostrc` config file |
+| `gatepost setup --ci` | Install PATH shims for CI/CD |
+| `gatepost remove` | Remove aliases and CI shims |
+| `gatepost init` | Interactive config setup |
 | `gatepost check <pkg...>` | Scan packages without installing |
+| `gatepost audit [dir]` | Scan lockfiles and manifests |
 | `gatepost <manager> [args]` | Run any manager with protection |
-
-| Flag | Effect |
-|---|---|
-| `--silent` | Only show blocked installs |
-| `--verbose` | Show detailed diagnostic output |
 
 ---
 
 ## How it works
 
-1. Shell aliases redirect `npm install foo` → `gatepost npm install foo`
-2. Gatepost extracts package names from the command arguments
-3. Four checks run in parallel: blocklist, typosquat, OSV vulnerability, package age
-4. Blocked packages exit with code 1 — nothing installs
-5. Warnings print to stderr but allow the install to continue
-6. Clean packages pass straight through to the real package manager
+1. Shell aliases redirect `npm install foo` -> `gatepost npm install foo`
+2. Gatepost extracts package names from the arguments
+3. Six checks run in parallel against each package
+4. Blocked = exit 1, nothing installs
+5. Warned = prints to stderr, install continues
+6. Clean = silent passthrough to the real binary
 
-If network checks fail, Gatepost warns and proceeds by default — it never blocks a legitimate workflow unless you configure it to.
+Network failures warn and proceed by default. Gatepost never breaks your workflow.
+
+---
+
+## Shells supported
+
+Zsh, Bash, Fish, Ksh, Tcsh, PowerShell, PowerShell Core
 
 ---
 
@@ -214,12 +243,6 @@ If network checks fail, Gatepost warns and proceeds by default — it never bloc
 gatepost remove
 npm uninstall -g @getbastionai/gatepost
 ```
-
----
-
-## Requirements
-
-- Node.js 16+
 
 ---
 
