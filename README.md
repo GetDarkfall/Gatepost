@@ -1,6 +1,4 @@
-<p align="center">
-  <img src="Image.png?v=3" alt="Gatepost" width="100%" />
-</p>
+![Gatepost Banner](Image.png)
 
 <h3 align="center">Supply chain security for every package manager.</h3>
 
