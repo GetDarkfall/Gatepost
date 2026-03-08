@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="Image.png?v=2" alt="Gatepost" width="100%" />
+  <img src="Image.png?v=3" alt="Gatepost" width="100%" />
 </p>
 
 <h3 align="center">Supply chain security for every package manager.</h3>
