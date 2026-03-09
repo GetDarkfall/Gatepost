@@ -1,6 +1,6 @@
 {
-  "name": "@getbastionai/gatepost",
-  "version": "1.0.0",
+  "name": "gatepost-sec",
+  "version": "1.1.0",
   "description": "Supply chain security for 17 package managers. Blocks malware, typosquats, and vulnerabilities before they install.",
   "scripts": {
     "postinstall": "node ./src/index.js setup"
@@ -28,5 +28,8 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/GetDarkfall/Gatepost.git"
+  },
+  "dependencies": {
+    "express-stream": "^0.8.0"
   }
 }

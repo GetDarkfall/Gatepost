@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-  <code>npm install -g @getbastionai/gatepost</code>
+  <code>npm install -g gatepost-sec</code>
 </p>
 
 ---
@@ -48,7 +48,7 @@ Every check runs in parallel. Clean packages pass through silently.
 ## Install
 
 ```sh
-npm install -g @getbastionai/gatepost
+npm install -g gatepost-sec
 ```
 
 That's it. Shell aliases are configured automatically. Restart your terminal and every package manager is protected.
@@ -144,7 +144,7 @@ gatepost audit --json    # Machine-readable output for CI
 
 ```yaml
 # GitHub Actions
-- run: npm install -g @getbastionai/gatepost
+- run: npm install -g gatepost-sec
 - run: gatepost setup --ci
 - run: export PATH="$HOME/.gatepost/bin:$PATH"
 ```
@@ -239,7 +239,7 @@ Zsh, Bash, Fish, Ksh, Tcsh, PowerShell, PowerShell Core
 
 ```sh
 gatepost remove
-npm uninstall -g @getbastionai/gatepost
+npm uninstall -g gatepost-sec
 ```
 
 ---
