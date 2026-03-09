@@ -162,7 +162,7 @@ function setup() {
   try {
     const tty = fs.createWriteStream('/dev/tty')
     tty.write('\x1b[2J\x1b[H')
-    tty.write('\n\x1b[35;1mGatepost\x1b[0m \x1b[90mhas been installed\x1b[0m \x1b[92msuccessfully\x1b[0m\n\n')
+    tty.write('\n\x1b[1;38;5;216mGatepost\x1b[0m \x1b[90mhas been installed\x1b[0m \x1b[92msuccessfully\x1b[0m\n\n')
     tty.write('\x1b[90mRun \x1b[1mgatepost init\x1b[0m\x1b[90m to configure your settings\x1b[0m\n')
     tty.write('\x1b[90mRestart your terminal or run: source ~/.zshrc\x1b[0m\n')
     tty.end()

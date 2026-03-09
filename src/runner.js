@@ -214,7 +214,7 @@ async function runWrapped(manager, args, checkPackages, config) {
   )
 
   if (blocked.length > 0) {
-    log.error(c.purple(c.bold('\ngatepost: install blocked\n')))
+    log.error(c.orange(c.bold('\ngatepost: install blocked\n')))
     for (const r of blocked) {
       for (const issue of r.issues) {
         log.error(`  ${c.red('blocked')}  ${c.bold(r.pkg)}  ${issue.message}\n`)
